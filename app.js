@@ -25,6 +25,16 @@ app.get('/',(req,res)=>{
   });
 });
 
+app.get('/notes',(req,res)=>{
+  Note.find({})
+  .sort({date:'desc'})
+  .then(notes=>{
+    res.render('notes/index',{
+      notes:notes
+    });
+  });
+});
+
 app.get('/about',(req,res)=>{
   res.render('about',{
     title:'About The App'
@@ -53,7 +63,15 @@ app.post('/notes',(req,res)=>{
     });
   }
   else{
-    res.send('Passed');
+    const newUser={
+      title:req.body.title_form,
+      details:req.body.details
+    }
+    new Note(newUser)
+    .save()
+    .then(note=>{
+      res.redirect('/notes');
+    });
   }
 });
 
