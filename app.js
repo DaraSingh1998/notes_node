@@ -2,6 +2,8 @@ const express = require('express');
 const exphbs  = require('express-handlebars');
 const bodyParser = require('body-parser');
 const methodOverride = require('method-override');
+const session = require('express-session');
+const flash = require('connect-flash');
 var mongoose=require('mongoose');
 
 const app=express();
@@ -20,6 +22,20 @@ app.set('view engine', 'handlebars');
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(methodOverride('_method'));
+app.use(session({
+  secret: 'secret',
+  resave: true,
+  saveUninitialized: true
+}));
+ app.use(flash());
+
+ // Global Variables
+ app.use(function(req,res,next) {
+   res.locals.success_msg=req.flash('success_msg');
+   res.locals.error_msg=req.flash('error_msg');
+   res.locals.error=req.flash('error');
+   next();
+ });
 
 app.get('/',(req,res)=>{
   res.render('index',{
@@ -83,6 +99,7 @@ app.post('/notes',(req,res)=>{
     new Note(newUser)
     .save()
     .then(note=>{
+      req.flash('success_msg','Note Added');
       res.redirect('/notes');
     });
   }
@@ -97,9 +114,18 @@ app.put('/notes/:id',(req,res)=>{
     note.details=req.body.details;
     note.save()
       .then(note=>{
+        req.flash('success_msg','Note Updated');
         res.redirect('/notes');
       });
   });
+});
+
+app.delete('/notes/:id',(req,res)=>{
+  Note.deleteOne({_id:req.params.id})
+    .then(()=>{
+      req.flash('success_msg','Note Removed');
+      res.redirect('/notes');
+    });
 });
 
 app.listen(PORT,()=>{
