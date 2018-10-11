@@ -1,6 +1,7 @@
 const express = require('express');
 const exphbs  = require('express-handlebars');
 const bodyParser = require('body-parser');
+const methodOverride = require('method-override');
 var mongoose=require('mongoose');
 
 const app=express();
@@ -18,6 +19,7 @@ app.set('view engine', 'handlebars');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(methodOverride('_method'));
 
 app.get('/',(req,res)=>{
   res.render('index',{
@@ -47,6 +49,17 @@ app.get('/notes/add',(req,res)=>{
   });
 });
 
+app.get('/notes/edit/:id',(req,res)=>{
+  Note.findOne({
+    _id:req.params.id
+  })
+  .then(note=>{
+    res.render('notes/edit',{
+      note:note
+    });
+  });
+});
+
 app.post('/notes',(req,res)=>{
   let err=[];
   if(!req.body.title_form){
@@ -73,6 +86,20 @@ app.post('/notes',(req,res)=>{
       res.redirect('/notes');
     });
   }
+});
+
+app.put('/notes/:id',(req,res)=>{
+  Note.findOne({
+    _id:req.params.id
+  })
+  .then(note=>{
+    note.title=req.body.title;
+    note.details=req.body.details;
+    note.save()
+      .then(note=>{
+        res.redirect('/notes');
+      });
+  });
 });
 
 app.listen(PORT,()=>{

@@ -6,15 +6,16 @@
 
 {{/each}}
 <div class="card card-body">
-  <h3>Add Notes</h3>
-  <form action="/notes" method="post">
+  <h3>Edit Notes</h3>
+  <form action="/notes/{{note.id}}?_method=PUT" method="post">
     <div class="form-group">
+      <input type="hidden" name="_method" value="PUT">
       <label for="title">Title</label>
-      <input type="text" class="form-control"  required name="title_form" value={{title_form}}>
+      <input type="text" class="form-control"  required name="title" value={{note.title}}>
     </div>
     <div class="form-group">
       <label for="details">Details</label>
-      <textarea class="form-control" name="details" required>{{details}}</textarea>
+      <textarea class="form-control" name="details" required>{{note.details}}</textarea>
     </div>
     <button type="submit" class="btn btn-primary">Add</button>
   </form>
