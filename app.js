@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const exphbs  = require('express-handlebars');
 const bodyParser = require('body-parser');
 const methodOverride = require('method-override');
@@ -7,12 +8,15 @@ const flash = require('connect-flash');
 var mongoose=require('mongoose');
 
 const app=express();
+
+const notes=require('./routes/notes');
+const users=require('./routes/users');
+
+
 mongoose.Promise = global.Promise;
 mongoose.connect('mongodb://localhost/notes-dev',{ useNewUrlParser: true })
 .then(()=>console.log('MongoDB Connected'))
 .catch(err=>console.log(err));
-
-const {Note}=require('./models/Note');
 
 const PORT=3000;
 
@@ -21,6 +25,7 @@ app.set('view engine', 'handlebars');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname,'public')));
 app.use(methodOverride('_method'));
 app.use(session({
   secret: 'secret',
@@ -43,15 +48,7 @@ app.get('/',(req,res)=>{
   });
 });
 
-app.get('/notes',(req,res)=>{
-  Note.find({})
-  .sort({date:'desc'})
-  .then(notes=>{
-    res.render('notes/index',{
-      notes:notes
-    });
-  });
-});
+
 
 app.get('/about',(req,res)=>{
   res.render('about',{
@@ -59,75 +56,10 @@ app.get('/about',(req,res)=>{
   });
 });
 
-app.get('/notes/add',(req,res)=>{
-  res.render('notes/add',{
-    title:'Add Notes'
-  });
-});
 
-app.get('/notes/edit/:id',(req,res)=>{
-  Note.findOne({
-    _id:req.params.id
-  })
-  .then(note=>{
-    res.render('notes/edit',{
-      note:note
-    });
-  });
-});
-
-app.post('/notes',(req,res)=>{
-  let err=[];
-  if(!req.body.title_form){
-  err.push({text:'Please enter the title'});
-  }
-  if(!req.body.details){
-  err.push({text:'Please enter the deatails'});
-  }
-  if(err.length>0){
-    res.render('notes/add',{
-      errors:err,
-      title_form:req.body.title_form,
-      details:req.body.details
-    });
-  }
-  else{
-    const newUser={
-      title:req.body.title_form,
-      details:req.body.details
-    }
-    new Note(newUser)
-    .save()
-    .then(note=>{
-      req.flash('success_msg','Note Added');
-      res.redirect('/notes');
-    });
-  }
-});
-
-app.put('/notes/:id',(req,res)=>{
-  Note.findOne({
-    _id:req.params.id
-  })
-  .then(note=>{
-    note.title=req.body.title;
-    note.details=req.body.details;
-    note.save()
-      .then(note=>{
-        req.flash('success_msg','Note Updated');
-        res.redirect('/notes');
-      });
-  });
-});
-
-app.delete('/notes/:id',(req,res)=>{
-  Note.deleteOne({_id:req.params.id})
-    .then(()=>{
-      req.flash('success_msg','Note Removed');
-      res.redirect('/notes');
-    });
-});
+app.use('/notes',notes);
+app.use('/users',users);
 
 app.listen(PORT,()=>{
   console.log(`Server started on port ${PORT}`);
-})
+});
