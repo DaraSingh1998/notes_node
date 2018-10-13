@@ -14,13 +14,13 @@ const notes=require('./routes/notes');
 const users=require('./routes/users');
 
 require('./config/passport')(passport);
-
+const db=require('./config/database');
 mongoose.Promise = global.Promise;
-mongoose.connect('mongodb://localhost/notes-dev',{ useNewUrlParser: true })
+mongoose.connect(db.mongoURI,{ useNewUrlParser: true })
 .then(()=>console.log('MongoDB Connected'))
 .catch(err=>console.log(err));
 
-const PORT=3000;
+const PORT=process.env.PORT||3000;
 
 app.engine('handlebars', exphbs({defaultLayout: 'main'}));
 app.set('view engine', 'handlebars');
